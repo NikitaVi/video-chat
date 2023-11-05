@@ -2,7 +2,7 @@ import { Server } from "socket.io";
 import express from 'express';
 import { createServer } from 'http';
 import UserController from "./Controllers/userController.js";
-import {isExist} from "./utils.js";
+import {findUserById, isExist} from "./utils.js";
 import bodyParser from 'body-parser';
 import fs from "fs";
 
@@ -28,8 +28,14 @@ io.on('connection', (socket) => {
 
         socket.join(room);
 
+
         if (!isExist(room, user)) {
-            USER_LIST.push({user, room})
+            USER_LIST.push({user, room, id: socket.id})
+        } else {
+            console.log(socket.id)
+            const idx = USER_LIST.findIndex(item => (item.room === room && item.user === user))
+            USER_LIST[idx] = {...USER_LIST[idx], id: socket.id}
+            console.log(USER_LIST)
         }
 
         const currentUsers = USER_LIST.filter(item => item.room === room);
@@ -37,13 +43,11 @@ io.on('connection', (socket) => {
         socket.emit("chat message", {
             user: PRIVATE_NAME,
             message: joinMessage,
-            type: "text"
         });
 
         socket.broadcast.to(room).emit("chat message", {
             user: PRIVATE_NAME,
             message: `${user} has joined to the room`,
-            type: "text"
         });
 
         io.to(room).emit("room", {
@@ -67,22 +71,34 @@ io.on('connection', (socket) => {
                 socket.emit("chat message", {
                     user: PRIVATE_NAME,
                     message: "Sending has been failed...",
-                    type: "text"
                 });
                 return
             }
         }
 
-        console.log(objectToSend)
-
         io.to(room).emit('chat message', objectToSend);
     });
+
+    socket.on("callRequest", ({user, room}) => {
+        socket.broadcast.to(room).emit("callRequestServ", {
+            user: user,
+            type: "call"
+        });
+    })
+
+    socket.on("callAnswer", ({type, room, peerId, toUser}) => {
+        if (type === "success") {
+            console.log(USER_LIST)
+            socket.broadcast.to(findUserById(room, toUser)).emit('callAnswerServ', {type, peerId});
+        } else {
+            socket.broadcast.to(findUserById(room, toUser)).emit('callAnswerServ', {type });
+        }
+    })
 
     socket.on('left', ({user, room}) => {
         socket.broadcast.to(room).emit("chat message", {
             user: PRIVATE_NAME,
             message: `${user} has left`,
-            type: "text"
         });
     })
 });
