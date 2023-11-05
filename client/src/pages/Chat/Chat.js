@@ -6,12 +6,15 @@ import { useSearchParams} from "react-router-dom";
 import Header from "./components/Header/Header";
 import Footer from "./components/Footer/Footer";
 import Modal from "../../components/Modal/Modal";
+import MembersModal from "./components/MembersModal";
+import CallPrompt from "./components/CallPrompt";
 
 const Chat = () => {
     const [value, setValue] = useState("");
     const [messages, setMessages] = useState([]);
     const [members, setMembers] = useState([]);
-    const [membersModal, setMemberModal] = useState(false)
+    const [membersModal, setMemberModal] = useState(false);
+    const [callPrompt, setCallPrompt] = useState("");
     const [files, setFiles] = useState([]);
     const [params] = useSearchParams();
     const user = params.get("user");
@@ -27,6 +30,18 @@ const Chat = () => {
         socket.on("room", ({members}) => {
             setMembers(members)
         });
+
+        socket.on("callRequestServ", ({user, type}) => {
+            setCallPrompt(user);
+        });
+
+        socket.on("callAnswerServ", ({type, peerId}) => {
+            if (type === "success") {
+                console.log(peerId)
+            } else {
+                console.log("dawdwa")
+            }
+        })
     }, [user]);
 
     // interface Idata {
@@ -82,19 +97,12 @@ const Chat = () => {
                 files={files}
                 setFiles={setFiles}
             />
-            {membersModal && (
-                <Modal title={"Members"} onClose={() => setMemberModal(false)}>
-                    <div className="chat__members-container">
-                        <ul className="chat__members-list">
-                            {members.map(member => (
-                                <div className="chat__member">
-                                    {member.user}
-                                </div>
-                            ))}
-                        </ul>
-                    </div>
-                </Modal>
-            )}
+            {membersModal && <MembersModal onClose={() => setMemberModal(false)} members={members}/>}
+            {!!callPrompt && <CallPrompt
+                onClose={() => setCallPrompt("")}
+                user={callPrompt}
+                room={room}
+            />}
         </div>
     )
 }
