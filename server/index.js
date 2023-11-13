@@ -3,7 +3,6 @@ import express from 'express';
 import { createServer } from 'http';
 import UserController from "./Controllers/userController.js";
 import {findUserById, isExist} from "./utils.js";
-import bodyParser from 'body-parser';
 import fs from "fs";
 
 const app = express();
@@ -32,10 +31,8 @@ io.on('connection', (socket) => {
         if (!isExist(room, user)) {
             USER_LIST.push({user, room, id: socket.id})
         } else {
-            console.log(socket.id)
             const idx = USER_LIST.findIndex(item => (item.room === room && item.user === user))
             USER_LIST[idx] = {...USER_LIST[idx], id: socket.id}
-            console.log(USER_LIST)
         }
 
         const currentUsers = USER_LIST.filter(item => item.room === room);
@@ -85,10 +82,10 @@ io.on('connection', (socket) => {
             type: "call"
         });
     })
-
+    console.log(999)
     socket.on("callAnswer", ({type, room, peerId, toUser}) => {
+        console.log(11111)
         if (type === "success") {
-            console.log(USER_LIST)
             socket.broadcast.to(findUserById(room, toUser)).emit('callAnswerServ', {type, peerId});
         } else {
             socket.broadcast.to(findUserById(room, toUser)).emit('callAnswerServ', {type });

@@ -8,6 +8,8 @@ import Footer from "./components/Footer/Footer";
 import Modal from "../../components/Modal/Modal";
 import MembersModal from "./components/MembersModal";
 import CallPrompt from "./components/CallPrompt";
+import {connectHandler} from "../VideoChat/helpers";
+import peerWrapper from "../../hoc/peerWrapper";
 
 const Chat = () => {
     const [value, setValue] = useState("");
@@ -36,8 +38,10 @@ const Chat = () => {
         });
 
         socket.on("callAnswerServ", ({type, peerId}) => {
+            console.log(222)
             if (type === "success") {
-                console.log(peerId)
+                console.log("success")
+                connectHandler(peerId)
             } else {
                 console.log("dawdwa")
             }
@@ -97,7 +101,10 @@ const Chat = () => {
                 files={files}
                 setFiles={setFiles}
             />
-            {membersModal && <MembersModal onClose={() => setMemberModal(false)} members={members}/>}
+            {membersModal && <MembersModal
+                onClose={() => setMemberModal(false)}
+                members={members}/>
+            }
             {!!callPrompt && <CallPrompt
                 onClose={() => setCallPrompt("")}
                 user={callPrompt}
@@ -107,4 +114,4 @@ const Chat = () => {
     )
 }
 
-export default Chat;
+export default peerWrapper(Chat);
