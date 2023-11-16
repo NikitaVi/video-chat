@@ -9,6 +9,7 @@ import Peer from "peerjs";
 import {PeerContext} from "../../context";
 
 const App = () => {
+
     useEffect(() => {
         socket.on('connect', () => {});
     }, []);
