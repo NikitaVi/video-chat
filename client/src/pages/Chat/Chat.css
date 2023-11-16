@@ -175,6 +175,17 @@
     justify-content: center;
 }
 
+.chat__video-call-container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 64px;
+    width: 70%;
+    height: 70%;
+    align-items: center;
+    justify-content: center;
+}
+
 .chat__call-answer {
     border-radius: 50%;
     background-color: #3bb248;

@@ -1,32 +1,82 @@
-import { useEffect, useState} from "react";
+import {useEffect, useState, useRef, useContext} from "react";
 import { socket} from "../../socket";
 import "./Chat.css"
 import Message from "./components/Message/Message";
 import { useSearchParams} from "react-router-dom";
 import Header from "./components/Header/Header";
 import Footer from "./components/Footer/Footer";
-import Modal from "../../components/Modal/Modal";
 import MembersModal from "./components/MembersModal";
 import CallPrompt from "./components/CallPrompt";
 import {connectHandler} from "../VideoChat/helpers";
-import peerWrapper from "../../hoc/peerWrapper";
+import Peer from "peerjs";
+import VideoModal from "./components/VideoModal";
+// import {$messages, initializedChatEvents} from "../../store";
+import {useStore} from "effector-react";
+import {PeerContext} from "../../context";
+// import {initializedChatEvents, messages} from "../../store";
 
 const Chat = () => {
+    // const messages = useStore($messages)
     const [value, setValue] = useState("");
     const [messages, setMessages] = useState([]);
+    const peer = useContext(PeerContext);
     const [members, setMembers] = useState([]);
     const [membersModal, setMemberModal] = useState(false);
     const [callPrompt, setCallPrompt] = useState("");
     const [files, setFiles] = useState([]);
+    const [videoModal, setVideoModal] = useState(false);
     const [params] = useSearchParams();
     const user = params.get("user");
     const room = params.get("room");
 
+    const [myPeer, setMyPeer] = useState("");
+
+    const newRef = useRef(null);
+    const myRef = useRef(null);
+
+    console.log(123)
+
+
     useEffect(() => {
+
+        //Подключение чужого видео
+        peer.on('open', function(id) {
+            setMyPeer(id)
+        });
+
+        peer.on('connection', function(conn) {
+            conn.on('data', function(data){
+                // Will print 'hi!'
+                const  getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+                peer.on('call', async function(call) {
+                    await getUserMedia({video: true, audio: true}, function(stream) {
+                        call.answer(stream); // Answer the call with an A/V stream.
+                        call.on('stream', function(remoteStream) {
+                            myRef.current.srcObject = remoteStream
+                            myRef.current.play()
+                                .then(_ => {
+                                })
+                                .catch(error => {
+                                    console.log(error)
+                                });
+                        });
+                    }, function(err) {
+                        console.log('Failed to get local stream' ,err);
+                    });
+                });
+            });
+        });
+
+    }, []);
+
+    useEffect(() => {
+
+        // initializedChatEvents(user, room);
+
         socket.emit('join', {user, room});
 
         socket.on("chat message", (msg) => {
-            setMessages(prev => [...prev, msg])
+            setMessages((prev) => [...prev, msg])
         });
 
         socket.on("room", ({members}) => {
@@ -38,10 +88,10 @@ const Chat = () => {
         });
 
         socket.on("callAnswerServ", ({type, peerId}) => {
-            console.log(222)
+
             if (type === "success") {
-                console.log("success")
-                connectHandler(peerId)
+                connectHandler(peerId, peer, newRef);
+                setVideoModal(true);
             } else {
                 console.log("dawdwa")
             }
@@ -74,8 +124,7 @@ const Chat = () => {
             }
 
             socket.emit("send message", sendObject, room);
-            setFiles([])
-
+            setFiles([]);
         }
     };
 
@@ -109,9 +158,18 @@ const Chat = () => {
                 onClose={() => setCallPrompt("")}
                 user={callPrompt}
                 room={room}
+                id={myPeer}
+                setVideoModal={setVideoModal}
+                peer={peer}
+                newRef={newRef}
+            />}
+            {videoModal && <VideoModal
+                onClose={() => setVideoModal(false)}
+                myRef={myRef}
+                newRef={newRef}
             />}
         </div>
     )
 }
 
-export default peerWrapper(Chat);
+export default Chat;

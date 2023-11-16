@@ -27,7 +27,6 @@ io.on('connection', (socket) => {
 
         socket.join(room);
 
-
         if (!isExist(room, user)) {
             USER_LIST.push({user, room, id: socket.id})
         } else {
@@ -82,9 +81,7 @@ io.on('connection', (socket) => {
             type: "call"
         });
     })
-    console.log(999)
     socket.on("callAnswer", ({type, room, peerId, toUser}) => {
-        console.log(11111)
         if (type === "success") {
             socket.broadcast.to(findUserById(room, toUser)).emit('callAnswerServ', {type, peerId});
         } else {
