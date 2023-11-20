@@ -2,15 +2,13 @@ import React, {useEffect} from "react";
 import Modal from "../../../../components/Modal/Modal";
 import "../../Chat.css"
 import {BiPhone, BiPhoneOff} from "react-icons/bi";
-import Peer from "peerjs";
 import {socket} from "../../../../socket";
 
-const CallPrompt = ({user, onClose, room, id, setVideoModal}) => {
+const CallPrompt = ({user, onClose, room, id}) => {
 
     const answerCallHandler = (answer) => {
         if (answer) {
             socket.emit("callAnswer", {type: "success", room: room, peerId: id, toUser: user});
-            setVideoModal(true)
         } else {
             socket.emit("callAnswer", {type: "failure", room: room, toUser: user})
         }

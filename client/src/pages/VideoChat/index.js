@@ -10,7 +10,11 @@ const VideoChat = () => {
     const newRef = useRef(null);
     const myRef = useRef(null);
 
-    const peer = new Peer();
+    const peer = new Peer({
+        host: "localhost",
+        port: 9000,
+        path: "/myapp",
+    });
 
     useEffect(() => {
         peer.on('open', function(id) {
@@ -25,22 +29,26 @@ const VideoChat = () => {
                 const getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
                 peer.on('call', async function(call) {
                     await getUserMedia({video: true, audio: true}, function(stream) {
-                        myRef.current.srcObject = stream
-                        myRef.current.play()
-                            .then(_ => {
-                            })
-                            .catch(error => {
-                                console.log(error)
-                            });
-                        call.answer(stream); // Answer the call with an A/V stream.
-                        call.on('stream', function(remoteStream) {
-                            newRef.current.srcObject = remoteStream
-                            newRef.current.play()
+                        if (myRef) {
+                            myRef.current.srcObject = stream
+                            myRef.current.play()
                                 .then(_ => {
                                 })
                                 .catch(error => {
                                     console.log(error)
                                 });
+                        }
+                        call.answer(stream); // Answer the call with an A/V stream.
+                        call.on('stream', function(remoteStream) {
+                            if (newRef) {
+                                newRef.current.srcObject = remoteStream
+                                newRef.current.play()
+                                    .then(_ => {
+                                    })
+                                    .catch(error => {
+                                        console.log(error)
+                                    });
+                            }
                         });
                     }, function(err) {
                         console.log('Failed to get local stream' ,err);
@@ -60,25 +68,29 @@ const VideoChat = () => {
 
             const getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
             await getUserMedia({video: true, audio: true}, function(stream) {
-                console.log('my stream');
-                myRef.current.srcObject = stream;
-                myRef.current.play()
-                    .then(_ => {
-                    })
-                    .catch(error => {
-                        console.log(error)
-                    });
-                const call = peer.call(connectPeer, stream);
-                console.log('other stream');
-
-                call.on('stream',  function(remoteStream) {
-                    newRef.current.srcObject = remoteStream;
-                    newRef.current.play()
+                if (myRef){
+                    myRef.current.srcObject = stream;
+                    myRef.current.play()
                         .then(_ => {
                         })
                         .catch(error => {
                             console.log(error)
                         });
+                }
+
+                const call = peer.call(connectPeer, stream);
+                console.log('other stream');
+
+                call.on('stream',  function(remoteStream) {
+                    if (newRef) {
+                        newRef.current.srcObject = remoteStream;
+                        newRef.current.play()
+                            .then(_ => {
+                            })
+                            .catch(error => {
+                                console.log(error)
+                            });
+                    }
                 });
             }, function(err) {
                 console.log('Failed to get local stream' ,err);

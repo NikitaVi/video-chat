@@ -1,16 +1,22 @@
 import {createStore, createEvent, createEffect, sample} from 'effector/compat'
 import {socket} from "../socket";
 
+
+//message
 export const $messages = createStore([]);
-const setMessages = createEvent();
+export const $setMessages = createEvent();
 
-$messages.on(setMessages, (state, data) => [...state, data])
+$messages.on($setMessages, (state, data) => [...state, data])
 
-export const initializedChatEvents = createEffect((user, room) => {
-    socket.emit('join', {user, room});
-
+export const postMessage = createEffect(() => {
     socket.on("chat message", (msg) => {
-        console.log(msg)
-        setMessages(msg)
+        $setMessages(msg)
     });
 });
+
+//modal
+
+export const $modal = createStore({type: "", visible: false, data: ""});
+export const $setModal = createEvent();
+
+$modal.on($setModal, (_, modal) => modal);

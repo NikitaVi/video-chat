@@ -4,6 +4,7 @@ import { createServer } from 'http';
 import UserController from "./Controllers/userController.js";
 import {findUserById, isExist} from "./utils.js";
 import fs from "fs";
+import { PeerServer } from "peer";
 
 const app = express();
 const server = createServer(app);
@@ -104,3 +105,6 @@ app.get('/', (req, res) => {
 server.listen(3000, () => {
     console.log('server running at http://localhost:3000');
 });
+
+const peerServer = PeerServer({ port: 9000, path: "/myapp" });
+
