@@ -14,21 +14,23 @@ const App = () => {
         socket.on('connect', () => {});
     }, []);
 
-    const peer = new Peer();
-
     return (
         <div className="container">
-            <PeerContext.Provider value={peer}>
-                <BrowserRouter>
-                    <Routes>
-                        <Route path='/' element={<Home />}/>
-                        <Route path="/chat" element={<Chat />}/>
-                        <Route path="/video" element={<VideoChat />}/>
-                    </Routes>
-                </BrowserRouter>
-            </PeerContext.Provider>
+            <BrowserRouter>
+                <Routes>
+                    <Route path='/' element={<Home />}/>
+                    <Route path="/chat" element={<Chat />}/>
+                    <Route path="/video" element={<VideoChat />}/>
+                </Routes>
+            </BrowserRouter>
         </div>
     )
 }
 
 export default App;
+
+export const peer = new Peer({
+    host: "localhost",
+    port: 9000,
+    path: "/myapp",
+});

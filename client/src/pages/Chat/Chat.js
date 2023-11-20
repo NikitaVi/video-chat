@@ -2,42 +2,39 @@ import {useEffect, useState, useRef, useContext} from "react";
 import { socket} from "../../socket";
 import "./Chat.css"
 import Message from "./components/Message/Message";
-import { useSearchParams} from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import Header from "./components/Header/Header";
 import Footer from "./components/Footer/Footer";
 import MembersModal from "./components/MembersModal";
 import CallPrompt from "./components/CallPrompt";
 import {connectHandler} from "../VideoChat/helpers";
 import VideoModal from "./components/VideoModal";
-import {$messages, $modal, $setModal, postMessage} from "../../store";
+import {
+    $core,
+    $setMembers,
+    $setModal,
+    $setMyPeer,
+    postMessage
+} from "../../store";
 import {useStore} from "effector-react";
-import Peer from "peerjs";
+import {peer} from "../App/App";
 
 const Chat = () => {
-    const messages = useStore($messages);
-    const modal = useStore($modal);
+    const {messages, modal, members, myPeer} = useStore($core);
+
     const [value, setValue] = useState("");
-    const [members, setMembers] = useState([]);
     const [files, setFiles] = useState([]);
-    const peer = new Peer({
-        host: "localhost",
-        port: 9000,
-        path: "/myapp",
-    });
 
     const [params] = useSearchParams();
     const user = params.get("user");
     const room = params.get("room");
 
-    const [myPeer, setMyPeer] = useState("");
-
     const newRef = useRef(null);
     const myRef = useRef(null);
 
     useEffect(() => {
-
         peer.on('open', function(id) {
-            setMyPeer(id)
+            $setMyPeer(id)
         });
 
         peer.on('connection', function(conn) {
@@ -83,7 +80,7 @@ const Chat = () => {
         postMessage();
 
         socket.on("room", ({members}) => {
-            setMembers(members)
+            $setMembers(members);
         });
 
         socket.on("callRequestServ", ({user, type}) => {
@@ -100,8 +97,6 @@ const Chat = () => {
             }
         })
     }, [user]);
-
-    console.log(modal)
 
     // interface Idata {
     //     user: string;
@@ -173,7 +168,7 @@ const Chat = () => {
                 onClose={() => $setModal({type: "video", visible: false})}
                 myRef={myRef}
                 newRef={newRef}
-            />
+                />
             }
         </div>
     )
