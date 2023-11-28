@@ -80,6 +80,7 @@ const Chat = () => {
         postMessage();
 
         socket.on("room", ({members}) => {
+            console.log(members)
             $setMembers(members);
         });
 
@@ -129,6 +130,8 @@ const Chat = () => {
         }
     };
 
+    console.log(messages)
+
     return (
         <div className="chat__container">
             <Header
@@ -140,7 +143,7 @@ const Chat = () => {
             <div className="chat__messages">
                 <ul className="chat__list">
                     {messages && messages.map((item, id) => (
-                        <Message message={item} key={id}/>
+                        <Message mes={item} key={id}/>
                     ))}
                 </ul>
             </div>
@@ -155,14 +158,16 @@ const Chat = () => {
                 onClose={() => $setModal({type: "members", visible: false})}
                 members={members}/>
             }
-            {modal.visible && modal.type === "callPrompt" && <CallPrompt
-                onClose={() => $setModal({type: "video", visible: true, data: ""})}
-                user={modal.data}
-                room={room}
-                id={myPeer}
-                peer={peer}
-                newRef={newRef}
+            {modal.visible && modal.type === "callPrompt" && (
+                <CallPrompt
+                    onClose={() => $setModal({type: "video", visible: true, data: ""})}
+                    user={modal.data}
+                    room={room}
+                    id={myPeer}
+                    peer={peer}
+                    newRef={newRef}
                 />
+            )
             }
             {modal.type === "video" && modal.visible && <VideoModal
                 onClose={() => $setModal({type: "video", visible: false})}

@@ -2,9 +2,10 @@ import { Server } from "socket.io";
 import express from 'express';
 import { createServer } from 'http';
 import UserController from "./Controllers/userController.js";
-import {findUserById, isExist} from "./utils.js";
-import fs from "fs";
+import { isExist} from "./utils.js";
 import { PeerServer } from "peer";
+import CallsController from "./Controllers/callsController.js";
+import MessageController from "./Controllers/messageController.js";
 
 const app = express();
 const server = createServer(app);
@@ -14,11 +15,13 @@ const PRIVATE_NAME = "__private_Admin"
 
 export const USER_LIST = [];
 
-const controller = new UserController();
+const userController = new UserController();
+const callsController = new CallsController();
+const messageController = new MessageController();
 
 app.use(express.static("images"));
 
-app.get("/api/members", controller.getMembers);
+app.get("/api/members", userController.getMembers);
 
 io.on('connection', (socket) => {
 
@@ -52,53 +55,21 @@ io.on('connection', (socket) => {
         });
     });
 
-    socket.on('send message', ({user, message, file}, room) => {
+    messageController.messageListenHandler(socket, io);
 
-        const objectToSend = {
-            user: user,
-            message: message,
-        }
+    callsController.callRequestHandler(socket);
 
-        if (!!file) {
-            try {
-                fs.writeFile(`./images/${file.name}`, file.file, (err) => console.log(err))
-                objectToSend["file"] = `http://localhost:3000/${file.name}`;
-
-            } catch (e) {
-                socket.emit("chat message", {
-                    user: PRIVATE_NAME,
-                    message: "Sending has been failed...",
-                });
-                return
-            }
-        }
-
-        io.to(room).emit('chat message', objectToSend);
-    });
-
-    socket.on("callRequest", ({user, room}) => {
-        socket.broadcast.to(room).emit("callRequestServ", {
-            user: user,
-            type: "call"
-        });
-    })
-    socket.on("callAnswer", ({type, room, peerId, toUser}) => {
-        if (type === "success") {
-            socket.broadcast.to(findUserById(room, toUser)).emit('callAnswerServ', {type, peerId});
-        } else {
-            socket.broadcast.to(findUserById(room, toUser)).emit('callAnswerServ', {type });
-        }
-    })
+    callsController.callAnswerHandler(socket);
 
     socket.on('left', ({user, room}) => {
         socket.broadcast.to(room).emit("chat message", {
             user: PRIVATE_NAME,
             message: `${user} has left`,
         });
-    })
+    });
 });
 
-app.get('/', (req, res) => {
+app.get('/', (_req, res) => {
     res.sendFile("./index.html",{ root: '.' });
 });
 
@@ -106,5 +77,5 @@ server.listen(3000, () => {
     console.log('server running at http://localhost:3000');
 });
 
-const peerServer = PeerServer({ port: 9000, path: "/myapp" });
+PeerServer({ port: 9000, path: "/myapp" });
 

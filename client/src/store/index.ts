@@ -1,5 +1,5 @@
-import {createStore, createEvent, createEffect, sample, combine} from 'effector/compat'
-import {socket} from "../socket";
+import {createStore, createEvent, createEffect, combine} from 'effector/compat'
+import {socket} from "../api/socket";
 
 //message
 const $messages = createStore([]);
@@ -42,7 +42,7 @@ export const $core = combine(
         members: $members,
         myPeer: $myPeer
     })
-)
+);
 
 
 
